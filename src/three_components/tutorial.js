@@ -62,11 +62,9 @@ scene.add(spotlight);
 const spotlight_helper = new THREE.SpotLightHelper(spotlight);
 scene.add(spotlight_helper);
 
-
 // axesHelper
 const axesHelper = new THREE.AxesHelper(5);
 scene.add(axesHelper);
-
 const gridHelper = new THREE.GridHelper(50);
 scene.add(gridHelper);
 

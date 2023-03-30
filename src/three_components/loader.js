@@ -1,11 +1,12 @@
 
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
-import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
-// import solider from "../assets/Soldier.glb";
 
-let idleAction, runAction, standAction, walkAction
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
+//import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+const FILEPATH = 'MERCEDES_AMG_GT.glb';
+let idleAction, runAction, standAction, walkAction;
 
 import * as dat from 'dat.gui';
 const gui = new dat.GUI();
@@ -19,8 +20,8 @@ const options = {
 gui.add(options, 'angle', 0, 1);
 gui.add(options, 'penumbra', 0, 1);
 gui.add(options, 'intensity', 0, 1);
-gui.add(options, 'walk', 0,  1.0, 0.01 ).listen().onChange(function(e){setWeight(walkAction, e);});
-gui.add(options, 'run', 0.0, 1.0, 0.01 ).listen().onChange(function(e){setWeight(runAction, e);});
+// gui.add(options, 'walk', 0,  1.0, 0.01 ).listen().onChange(function(e){setWeight(walkAction, e);});
+// gui.add(options, 'run', 0.0, 1.0, 0.01 ).listen().onChange(function(e){setWeight(runAction, e);});
 
 const scene = new THREE.Scene();
 const sizes = {
@@ -30,7 +31,7 @@ const sizes = {
 
 // light
 const spotlight = new THREE.SpotLight(0xffffff);
-spotlight.position.set(5,10,0);
+spotlight.position.set(20,20,0);
 spotlight.castShadow = true;
 spotlight.angle = 0.3;
 scene.add(spotlight);
@@ -50,46 +51,70 @@ renderer.setPixelRatio(2);
 renderer.shadowMap.enabled = true;
 renderer.render(scene, camera);
 renderer.setClearColor(0x111111);
-scene.fog = new THREE.Fog( 0xa0a0a0, 10, 50 );
+// scene.fog = new THREE.Fog( 0xa0a0a0, 10, 50 );
 
 // orbitControl
 const control = new OrbitControls(camera, canvas);
 
 // import solider asset
+// const assetLoader = new GLTFLoader();
+// let mixer;
+// assetLoader.load('Soldier.glb', function ( gltf ) {
+    // gltf.scene.traverse( function ( object ) {
+    //     if ( object.isMesh ) object.castShadow = true;
+    // });
+//     const model = SkeletonUtils.clone( gltf.scene );
+//     mixer = new THREE.AnimationMixer( model );
+
+//     const animations = gltf.animations;
+//     idleAction = mixer.clipAction( animations[ 0 ] );
+//     runAction  = mixer.clipAction( animations[ 1 ] );
+//     standAction = mixer.clipAction( animations[ 2 ] );
+//     walkAction = mixer.clipAction( animations[ 3 ] );
+
+//     const actions = [ idleAction, walkAction, standAction, runAction,];
+//     setWeight( idleAction, 0.0 );
+//     setWeight( walkAction, options.walk );
+//     setWeight( standAction, 0.0 );
+//     setWeight( runAction, options.run );
+//     actions.forEach( function ( action ) { action.play(); });
+
+//     const skeleton = new THREE.SkeletonHelper( model );
+//     skeleton.visible = false;
+//     scene.add( skeleton );
+//     scene.add(model);
+// } );
+
+// function setWeight( action, weight ) {
+//     action.enabled = true;
+//     action.setEffectiveTimeScale( 1 );
+//     action.setEffectiveWeight( weight );
+// }
+
+// import car
 const assetLoader = new GLTFLoader();
 let mixer;
-assetLoader.load('Soldier.glb', function ( gltf ) {
+assetLoader.load(FILEPATH, function ( gltf ) {
     gltf.scene.traverse( function ( object ) {
-        if ( object.isMesh ) object.castShadow = true;
+        if ( object.isMesh ) {
+            object.castShadow = true;
+        }
     });
-
     const model = SkeletonUtils.clone( gltf.scene );
     mixer = new THREE.AnimationMixer( model );
 
     const animations = gltf.animations;
-    idleAction = mixer.clipAction( animations[ 0 ] );
-    runAction  = mixer.clipAction( animations[ 1 ] );
-    standAction = mixer.clipAction( animations[ 2 ] );
-    walkAction = mixer.clipAction( animations[ 3 ] );
-
-    const actions = [ idleAction, walkAction, standAction, runAction,];
-    setWeight( idleAction, 0.0 );
-    setWeight( walkAction, options.walk );
-    setWeight( standAction, 0.0 );
-    setWeight( runAction, options.run );
-    actions.forEach( function ( action ) { action.play(); });
+    //console.log(animations.length);
+    animations.forEach( function (clip) {
+        const action = mixer.clipAction(clip);
+        action.play();
+    });
 
     const skeleton = new THREE.SkeletonHelper( model );
     skeleton.visible = false;
     scene.add( skeleton );
     scene.add(model);
 } );
-
-function setWeight( action, weight ) {
-    action.enabled = true;
-    action.setEffectiveTimeScale( 1 );
-    action.setEffectiveWeight( weight );
-}
 
 const planeGemometry = new THREE.PlaneGeometry(15, 15);
 const planeMaterial  = new THREE.MeshStandardMaterial({color: 0xC6C6C6, side: THREE.DoubleSide});

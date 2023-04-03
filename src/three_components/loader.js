@@ -1,12 +1,10 @@
-
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 //import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
-const FILEPATH = 'MERCEDES_AMG_GT.glb';
-let idleAction, runAction, standAction, walkAction;
+const FILEPATH = 'rb6_source/rb6.glb';
 
 import * as dat from 'dat.gui';
 const gui = new dat.GUI();
@@ -20,8 +18,6 @@ const options = {
 gui.add(options, 'angle', 0, 1);
 gui.add(options, 'penumbra', 0, 1);
 gui.add(options, 'intensity', 0, 1);
-// gui.add(options, 'walk', 0,  1.0, 0.01 ).listen().onChange(function(e){setWeight(walkAction, e);});
-// gui.add(options, 'run', 0.0, 1.0, 0.01 ).listen().onChange(function(e){setWeight(runAction, e);});
 
 const scene = new THREE.Scene();
 const sizes = {
@@ -55,6 +51,62 @@ renderer.setClearColor(0x111111);
 
 // orbitControl
 const control = new OrbitControls(camera, canvas);
+
+// import RB6
+const assetLoader = new GLTFLoader();
+let mixer;
+assetLoader.load(FILEPATH, function ( gltf ) {
+    gltf.scene.traverse( function ( object ) {
+        if ( object.isMesh ) {
+            object.castShadow = true;
+        }
+    });
+    const model = SkeletonUtils.clone( gltf.scene );
+    model.scale.set(0.2, 0.2, 0.2);
+    mixer = new THREE.AnimationMixer( model );
+
+    const animations = gltf.animations;
+    animations.forEach( function (clip) {
+        const action = mixer.clipAction(clip);
+        action.play();
+    });
+
+    const skeleton = new THREE.SkeletonHelper( model );
+    skeleton.visible = false;
+    scene.add( skeleton );
+    scene.add(model);
+    model.position.y += 0.6;
+    skeleton.position.y += 0.6;
+} );
+
+const planeGemometry = new THREE.PlaneGeometry(15, 15);
+const planeMaterial  = new THREE.MeshStandardMaterial({color: 0xC6C6C6, side: THREE.DoubleSide});
+const plane = new THREE.Mesh(planeGemometry, planeMaterial);
+plane.rotation.x = Math.PI / 2;
+plane.receiveShadow = true;
+scene.add(plane);
+
+// Loop
+const clock = new THREE.Clock();
+const loop = () => {
+    spotlight.angle = options.angle;
+    spotlight.penumbra = options.penumbra;
+    spotlight.intensity = options.intensity;
+    spotlight_helper.update();
+
+    if(mixer)
+        mixer.update(clock.getDelta());
+
+    control.update();
+    renderer.render(scene, camera);
+    window.requestAnimationFrame(loop);
+}
+
+loop();
+
+
+
+
 
 // import solider asset
 // const assetLoader = new GLTFLoader();
@@ -92,51 +144,26 @@ const control = new OrbitControls(camera, canvas);
 // }
 
 // import car
-const assetLoader = new GLTFLoader();
-let mixer;
-assetLoader.load(FILEPATH, function ( gltf ) {
-    gltf.scene.traverse( function ( object ) {
-        if ( object.isMesh ) {
-            object.castShadow = true;
-        }
-    });
-    const model = SkeletonUtils.clone( gltf.scene );
-    mixer = new THREE.AnimationMixer( model );
+// const assetLoader = new GLTFLoader();
+// let mixer;
+// assetLoader.load(FILEPATH, function ( gltf ) {
+//     gltf.scene.traverse( function ( object ) {
+//         if ( object.isMesh ) {
+//             object.castShadow = true;
+//         }
+//     });
+//     const model = SkeletonUtils.clone( gltf.scene );
+//     mixer = new THREE.AnimationMixer( model );
 
-    const animations = gltf.animations;
-    //console.log(animations.length);
-    animations.forEach( function (clip) {
-        const action = mixer.clipAction(clip);
-        action.play();
-    });
+//     const animations = gltf.animations;
+//     //console.log(animations.length);
+//     animations.forEach( function (clip) {
+//         const action = mixer.clipAction(clip);
+//         action.play();
+//     });
 
-    const skeleton = new THREE.SkeletonHelper( model );
-    skeleton.visible = false;
-    scene.add( skeleton );
-    scene.add(model);
-} );
-
-const planeGemometry = new THREE.PlaneGeometry(15, 15);
-const planeMaterial  = new THREE.MeshStandardMaterial({color: 0xC6C6C6, side: THREE.DoubleSide});
-const plane = new THREE.Mesh(planeGemometry, planeMaterial);
-plane.rotation.x = Math.PI / 2;
-plane.receiveShadow = true;
-scene.add(plane);
-
-// Loop
-const clock = new THREE.Clock();
-const loop = () => {
-    spotlight.angle = options.angle;
-    spotlight.penumbra = options.penumbra;
-    spotlight.intensity = options.intensity;
-    spotlight_helper.update();
-
-    if(mixer)
-        mixer.update(clock.getDelta());
-
-    control.update();
-    renderer.render(scene, camera);
-    window.requestAnimationFrame(loop);
-}
-
-loop();
+//     const skeleton = new THREE.SkeletonHelper( model );
+//     skeleton.visible = false;
+//     scene.add( skeleton );
+//     scene.add(model);
+// } );

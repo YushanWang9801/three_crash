@@ -4,7 +4,7 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 //import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
-const FILEPATH = 'rb6_source/rb6.glb';
+const FILEPATH = '250_GT_Spider.glb';
 
 import * as dat from 'dat.gui';
 const gui = new dat.GUI();
@@ -52,7 +52,7 @@ renderer.setClearColor(0x111111);
 // orbitControl
 const control = new OrbitControls(camera, canvas);
 
-// import RB6
+// import car
 const assetLoader = new GLTFLoader();
 let mixer;
 assetLoader.load(FILEPATH, function ( gltf ) {
@@ -62,10 +62,10 @@ assetLoader.load(FILEPATH, function ( gltf ) {
         }
     });
     const model = SkeletonUtils.clone( gltf.scene );
-    model.scale.set(0.2, 0.2, 0.2);
     mixer = new THREE.AnimationMixer( model );
 
     const animations = gltf.animations;
+    //console.log(animations.length);
     animations.forEach( function (clip) {
         const action = mixer.clipAction(clip);
         action.play();
@@ -75,8 +75,6 @@ assetLoader.load(FILEPATH, function ( gltf ) {
     skeleton.visible = false;
     scene.add( skeleton );
     scene.add(model);
-    model.position.y += 0.6;
-    skeleton.position.y += 0.6;
 } );
 
 const planeGemometry = new THREE.PlaneGeometry(15, 15);
